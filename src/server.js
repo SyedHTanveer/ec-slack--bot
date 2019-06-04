@@ -5,6 +5,7 @@ import path from 'path';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import botkit from 'botkit';
+import yelp from 'yelp-fusion';
 
 dotenv.config({ silent: true });
 
@@ -55,25 +56,50 @@ controller.setupWebserver(process.env.PORT || 3001, (err, webserver) => {
   });
 });
 
-// example hello response
-controller.hears(['hello', 'hi', 'howdy'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.api.users.info({ user: message.user }, (err, res) => {
-    if (res) {
-      bot.reply(message, `Hello, ${res.user.name}!`);
-    } else {
-      bot.reply(message, 'Hello there!');
-    }
-  });
+controller.hears(['hungry'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.reply(message, 'Would you like food reccomendations near you?');
+});
+
+controller.hears(['Yes'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.reply(message, 'Great, what would you like to eat?');
+});
+
+controller.hears(['sushi'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.reply(message, 'Tell me where you are located so i can find some places near you!');
+});
+
+controller.hears(['hanover, NH'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.reply(message, 'Ok, these are some businesses that sell Sushi near you: ');
   yelpClient.search({
     term: 'Sushi',
     location: 'hanover, nh',
   }).then((response) => {
-    console.log(response.jsonBody.businesses[0].name);
+    response.jsonBody.businesses.forEach((business) => {
+      bot.reply(message, `${business.name}, ${business.display_phone}, ${business.price}`);
+    });
   }).catch((e) => {
     console.log(e);
   });
 });
 
+controller.hears(['motivation'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  const min = 0;
+  const max = 5;
+  const random = Math.floor(Math.random() * (+max - +min)) + +min;
+  if (random === 0) {
+    bot.reply(message, 'Your limitation—it\'s only your imagination.');
+  } else if (random > 3) {
+    bot.reply(message, 'The harder you work for something, the greater you\'ll feel when you achieve it.');
+  } else {
+    bot.reply(message, 'Push yourself, because no one else is going to do it for you.');
+  }
+});
+
+controller.hears(['help'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.reply(message, 'I can help you with finding places to eat if you are hungry and i can give you motivation.');
+  bot.reply(message, 'If you are hungry, just type "im hungry');
+  bot.reply(message, 'If you need motivation, just type "i need motivation');
+});
 
 // default index route
 app.get('/', (req, res) => {
