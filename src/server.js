@@ -5,7 +5,9 @@ import path from 'path';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import botkit from 'botkit';
-import yelp from 'yelp-fusion';
+import 'yelp-fusion';
+
+const yelp = require('yelp-fusion');
 
 dotenv.config({ silent: true });
 
