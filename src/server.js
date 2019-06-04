@@ -34,6 +34,19 @@ app.set('views', path.join(__dirname, '../src/views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+
+// default index route
+app.get('/', (req, res) => {
+  res.send('hi');
+});
+
+// START THE SERVER
+// =============================================================================
+const port = process.env.PORT || 9090;
+app.listen(port);
+
+console.log(`listening on: ${port}`);
+
 // botkit controller
 const controller = botkit.slackbot({
   debug: false,
@@ -48,7 +61,7 @@ const slackbot = controller.spawn({
   if (err) { throw new Error(err); }
 });
 
-// prepare webhook
+
 // for now we won't use this but feel free to look up slack webhooks
 controller.setupWebserver(process.env.PORT || 3001, (err, webserver) => {
   controller.createWebhookEndpoints(webserver, slackbot, () => {
@@ -56,30 +69,35 @@ controller.setupWebserver(process.env.PORT || 3001, (err, webserver) => {
   });
 });
 
-controller.hears(['hungry'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.reply(message, 'Would you like food reccomendations near you?');
-});
-
-controller.hears(['Yes'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.reply(message, 'Great, what would you like to eat?');
-});
-
-controller.hears(['sushi'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.reply(message, 'Tell me where you are located so i can find some places near you!');
-});
-
-controller.hears(['hanover, NH'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.reply(message, 'Ok, these are some businesses that sell Sushi near you: ');
-  yelpClient.search({
-    term: 'Sushi',
-    location: 'hanover, nh',
-  }).then((response) => {
-    response.jsonBody.businesses.forEach((business) => {
-      bot.reply(message, `${business.name}, ${business.display_phone}, ${business.price}`);
-    });
-  }).catch((e) => {
-    console.log(e);
+// example hello response
+controller.hears(['hello', 'hi', 'howdy'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+  bot.api.users.info({ user: message.user }, (err, res) => {
+    if (res) {
+      bot.reply(message, `Hello, ${res.user.name}!`);
+    } else {
+      bot.reply(message, 'Hello there!');
+    }
   });
+});
+
+controller.hears(['I\'m hungry', 'hungry', 'food'], ['direct_message', 'direct_mention', 'mention'], (b, m) => {
+  b.reply(m, 'Where are you located? this is the area i will search for food');
+  controller.hears('[a-z]*', ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
+    yelpClient.search({
+      term: 'food',
+      location: `${message.text}`,
+    }).then((response) => {
+      console.log(response);
+      bot.reply(message, `Have you considered ${response.jsonBody.businesses[0].name}?`);
+    }).catch((e) => {
+      bot.reply(message, 'Sorry I ran into a problem, try again!');
+      console.log(e);
+    });
+  });
+});
+
+controller.on('outgoing_webhook', (bot, message) => {
+  bot.replyPublic(message, 'yeah yeah');
 });
 
 controller.hears(['motivation'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
@@ -99,15 +117,3 @@ controller.hears(['help'], ['direct_message', 'direct_mention', 'mention'], (bot
   bot.reply(message, 'If you are hungry, just type "im hungry"');
   bot.reply(message, 'If you need motivation, just type "i need motivation"');
 });
-
-// default index route
-app.get('/', (req, res) => {
-  res.send('hi');
-});
-
-// START THE SERVER
-// =============================================================================
-const port = process.env.PORT || 9090;
-app.listen(port);
-
-console.log(`listening on: ${port}`);
