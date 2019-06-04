@@ -1,4 +1,4 @@
-# starter express app template
+# BotBotBot
 
 * node with babel
 * expressjs
