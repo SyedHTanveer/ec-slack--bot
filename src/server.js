@@ -96,9 +96,8 @@ controller.hears(['motivation'], ['direct_message', 'direct_mention', 'mention']
 });
 
 controller.hears(['help'], ['direct_message', 'direct_mention', 'mention'], (bot, message) => {
-  bot.reply(message, 'I can help you with finding places to eat if you are hungry and i can give you motivation.');
-  bot.reply(message, 'If you are hungry, just type "im hungry');
-  bot.reply(message, 'If you need motivation, just type "i need motivation');
+  bot.reply(message, 'If you are hungry, just type "im hungry"');
+  bot.reply(message, 'If you need motivation, just type "i need motivation"');
 });
 
 // default index route
